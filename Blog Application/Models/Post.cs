@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Blog_Application.Models
@@ -18,6 +19,7 @@ namespace Blog_Application.Models
         [Required(ErrorMessage ="Please Insert Author")]
         [MaxLength(100, ErrorMessage = "Character Limit exceeded. 100 characters only.")]
         public string Author { get; set; }
+        [ValidateNever]
         public string FeatureImagePath { get; set; }
 
         [DataType(DataType.Date)]
@@ -25,9 +27,10 @@ namespace Blog_Application.Models
 
         [ForeignKey("Category")]
         public int CategoryId { get; set; }
+        [ValidateNever]
         public Category Category { get; set; }
 
-        public ICollection<Comment> Comments { get; set; }
-
+        /*public ICollection<Comment> Comments { get; set; }
+*/
     }
 }
