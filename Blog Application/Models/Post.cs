@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -26,11 +27,12 @@ namespace Blog_Application.Models
         public DateTime PublishedDate { get; set; }= DateTime.Now;
 
         [ForeignKey("Category")]
+        [DisplayName("Category")]
         public int CategoryId { get; set; }
         [ValidateNever]
         public Category Category { get; set; }
 
-        /*public ICollection<Comment> Comments { get; set; }
-*/
+        public ICollection<Comment> Comments { get; set; }
+
     }
 }
