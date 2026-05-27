@@ -127,7 +127,7 @@ namespace Blog_Application.Controllers
             {
                 return View(editViewModel);
             }
-            var postFromDb=await _context.Posts.FirstOrDefaultAsync(p=>p.Id==editViewModel.Post.Id);
+            var postFromDb=await _context.Posts.AsNoTracking().FirstOrDefaultAsync(p=>p.Id==editViewModel.Post.Id);
 
             if(postFromDb == null)
             {
