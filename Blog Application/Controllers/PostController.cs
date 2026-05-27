@@ -1,9 +1,11 @@
 ﻿using Blog_Application.Data;
+using Blog_Application.Models;
 using Blog_Application.Models.ViewModels;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Blog_Application.Controllers
 {
@@ -89,6 +91,87 @@ namespace Blog_Application.Controllers
             }).ToList();
 
             return View(postViewModel); 
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+            var postFormDb = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
+            if (postFormDb == null)
+            {
+                return NotFound();
+            }
+            EditViewModel editViewModel = new EditViewModel
+            {
+                Post = postFormDb,
+                Categories = await _context.Categories.Select(c =>
+                new SelectListItem
+                {
+                    Value = c.Id.ToString(),
+                    Text = c.Name
+                }
+                ).ToListAsync()
+            };
+            return View(editViewModel);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Edit(EditViewModel editViewModel)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(editViewModel);
+            }
+            var postFromDb=await _context.Posts.FirstOrDefaultAsync(p=>p.Id==editViewModel.Post.Id);
+
+            if(postFromDb == null)
+            {
+                return NotFound();
+            }
+            if(editViewModel.FeatureImage != null)
+            {
+                var inputFileExtension = Path.GetExtension(editViewModel.FeatureImage.FileName).ToLower();
+                bool isAllowed = _allowedExtension.Contains(inputFileExtension);
+
+                if (!isAllowed)
+                {
+                    ModelState.AddModelError("", "Invalid Image Format. Allowed Format are .jpg, .jpeg, .png");
+                    return View(editViewModel);
+                }
+                var existingFilePath = Path.Combine(_webHostEnvironment.WebRootPath, "Images", Path.GetFileName(postFromDb.FeatureImagePath));
+           
+                if(System.IO.File.Exists(existingFilePath))
+                {
+                    System.IO.File.Delete(existingFilePath);
+                }
+
+                editViewModel.Post.FeatureImagePath = await UploadFileToFolder(editViewModel.FeatureImage);
+            }
+            else
+            {
+                editViewModel.Post.FeatureImagePath = postFromDb.FeatureImagePath;
+            }
+            _context.Posts.Update(editViewModel.Post);
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Index");
+        }
+        public JsonResult AddComment([FromBody]Comment comment)
+        {
+            comment.CommentDate = DateTime.Now;
+            _context.Comments.Add(comment);
+            _context.SaveChanges();
+
+            return Json(new
+            {
+                username = comment.UserName,
+                commentDate = comment.CommentDate.ToString("MMMM dd,yyyy"),
+                content = comment.Content
+            });
         }
         public async Task<string> UploadFileToFolder(IFormFile file)
         {
