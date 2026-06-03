@@ -120,6 +120,46 @@ namespace Blog_Application.Controllers
             return View(editViewModel);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var postFromDb = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
+            if(postFromDb == null)
+            {
+                return NotFound();
+            }
+            return View(postFromDb);
+        }
+        [HttpPost]
+        public async Task<IActionResult> DeleteConfirm(int id)
+        {
+            var postFromDb = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
+
+            if (postFromDb == null)
+            {
+                return NotFound();
+            }
+
+            // delete image if exists
+            if (!string.IsNullOrEmpty(postFromDb.FeatureImagePath))
+            {
+                var existingFilePath = Path.Combine(
+                    _webHostEnvironment.WebRootPath,
+                    "Images",
+                    Path.GetFileName(postFromDb.FeatureImagePath)
+                );
+
+                if (System.IO.File.Exists(existingFilePath))
+                {
+                    System.IO.File.Delete(existingFilePath);
+                }
+            }
+
+            _context.Posts.Remove(postFromDb);
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
         [HttpPost]
         public async Task<IActionResult> Edit(EditViewModel editViewModel)
         {
