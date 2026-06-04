@@ -27,6 +27,12 @@ namespace Blog_Application
                 options.Password.RequiredLength = 1;
             }).AddEntityFrameworkStores<AppDbContext>();
 
+
+            builder.Services.ConfigureApplicationCookie(options =>
+            {
+                options.ExpireTimeSpan = TimeSpan.FromDays(3);
+                options.SlidingExpiration=true;
+            });
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
