@@ -1,6 +1,7 @@
 ﻿using Blog_Application.Data;
 using Blog_Application.Models;
 using Blog_Application.Models.ViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -9,6 +10,7 @@ using System.Linq;
 
 namespace Blog_Application.Controllers
 {
+    [Authorize]
     public class PostController : Controller
     {
         private readonly AppDbContext _context;
@@ -34,6 +36,7 @@ namespace Blog_Application.Controllers
             return View(posts);
         }
 
+        [HttpGet]
         public async Task<IActionResult> Detail(int id)
         {
             if (id == null)
@@ -51,6 +54,7 @@ namespace Blog_Application.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles ="Admin")]
         public IActionResult Create()
         {
             var postViewModel = new PostViewModel();
@@ -65,6 +69,8 @@ namespace Blog_Application.Controllers
             return View(postViewModel);
         }
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> Create(PostViewModel postViewModel)
         {
             if(ModelState.IsValid)
@@ -95,6 +101,8 @@ namespace Blog_Application.Controllers
 
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> Edit(int id)
         {
             if (id == null)
@@ -121,6 +129,8 @@ namespace Blog_Application.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = "Admin")]
+          
         public async Task<IActionResult> Delete(int id)
         {
             var postFromDb = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
@@ -131,6 +141,8 @@ namespace Blog_Application.Controllers
             return View(postFromDb);
         }
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> DeleteConfirm(int id)
         {
             var postFromDb = await _context.Posts.FirstOrDefaultAsync(p => p.Id == id);
@@ -200,6 +212,7 @@ namespace Blog_Application.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Index");
         }
+        [Authorize]
         public JsonResult AddComment([FromBody]Comment comment)
         {
             comment.CommentDate = DateTime.Now;

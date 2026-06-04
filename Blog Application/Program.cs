@@ -6,7 +6,7 @@ namespace Blog_Application
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -30,18 +30,48 @@ namespace Blog_Application
 
             builder.Services.ConfigureApplicationCookie(options =>
             {
+                options.LoginPath = "/Auth/Login";
+                options.AccessDeniedPath = "/Auth/AccessDenied";
                 options.ExpireTimeSpan = TimeSpan.FromDays(3);
                 options.SlidingExpiration=true;
             });
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
-            if (!app.Environment.IsDevelopment())
+            using (var scope = app.Services.CreateScope())
             {
-                app.UseExceptionHandler("/Home/Error");
-                // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
-                app.UseHsts();
+               var _userManager = scope.ServiceProvider.GetRequiredService<UserManager<IdentityUser>>();
+               var _roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+
+                string adminEmail = "admin@gmail.com";
+                string adminPassword = "admin";
+
+                var existingAdminRole = await _roleManager.FindByNameAsync("Admin");
+                if (existingAdminRole==null)
+                {
+                    await _roleManager.CreateAsync(new IdentityRole("Admin"));
+                } 
+                var existingAdminUser= await _userManager.FindByEmailAsync(adminEmail);
+                if(existingAdminUser == null)
+                {
+                    var adminUser = new IdentityUser
+                    {
+                        UserName = adminEmail,
+                        Email = adminEmail,
+                    };
+                    await _userManager.CreateAsync(adminUser, adminPassword);
+
+                    await _userManager.AddToRoleAsync(adminUser, "Admin");
+                }
             }
+
+
+                // Configure the HTTP request pipeline.
+                if (!app.Environment.IsDevelopment())
+                {
+                    app.UseExceptionHandler("/Home/Error");
+                    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
+                    app.UseHsts();
+                }
 
             app.UseHttpsRedirection();
             app.UseStaticFiles();
